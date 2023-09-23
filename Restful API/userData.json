@@ -1,0 +1,16 @@
+[
+    {
+      "id": 3,
+      "name": "IJK",
+      "email": "ijk@gmail.com",
+      "age": 20,
+      "address": "militray base"
+    },
+    {
+      "id": 4,
+      "name": "qq",
+      "email": "qq@gmail.com",
+      "age": 20,
+      "address": "Georgopol"
+    }
+  ]
