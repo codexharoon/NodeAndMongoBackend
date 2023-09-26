@@ -3,3 +3,6 @@
 
 # Ignore package-lock.json in any subdirectory
 **/package-lock.json
+
+#ignore .env file
+**/.env
