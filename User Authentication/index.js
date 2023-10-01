@@ -7,7 +7,11 @@ const userRoutes = require('./controller/userRoutes');
 const todoRoutes = require('./controller/todoRoutes');
 const app = express();
 
+//using cookie parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
+//using body parser and cors
 app.use(bodyParser.json());
 app.use(cors());
 

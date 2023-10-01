@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 require('dotenv').config();
 
-
 // getting all users
 router.get('/all', async (req,res)=>{
     const allUsers = await userReg.find();
@@ -20,7 +19,7 @@ router.get('/all', async (req,res)=>{
 // register a user
 router.post('/register', async (req,res)=>{
     try{
-        const {username , email , password, age, gender } = req.body;
+        const {username , email , password, age, gender, refreshToken } = req.body;
 
         // check user email and username existence
         const isUserExist = await userReg.findOne({$or : [{username},{email}] });
@@ -39,7 +38,8 @@ router.post('/register', async (req,res)=>{
                     email,
                     password : hashedPass,
                     age,
-                    gender
+                    gender,
+                    refreshToken
                 }
             ).save();
 
@@ -78,12 +78,24 @@ router.post('/login', async (req,res)=>{
             return res.status(401).json({message : 'Invalid Credentials (Hint : password)'});
         }
 
-        //generating token
-        const token = await jwt.sign({id : isUserExist._id},process.env.JWT_SCRET_KEY,{expiresIn : '1h'});
+        //generating access token
+        const accessToken = await jwt.sign({id : isUserExist._id},process.env.JWT_SCRET_KEY,{expiresIn : '1h'});
+
+        //generating refresh token
+        const refershToken = await jwt.sign({id : isUserExist._id},process.env.JWT_REFRESH_SCRET_KEY);
+
+        //store the refreh token into db => user obj
+        isUserExist.refreshToken = refershToken;
+        await isUserExist.save();
+
+        //store refresh token into cookies
+        // res.cookie('refreshToken',refershToken,{httpOnly : true, path : '/refreshToken'});
+        res.cookie('refreshToken',refershToken,{httpOnly : true});
 
         res.json({
             message : 'user login success!',
-            token
+            accessToken,
+            refershToken
         });
         
     }
@@ -117,7 +129,7 @@ function authenticateToken(req,res,next){
     }
     catch(error){
         res.status(500).json({
-            message : 'Invalid Token'
+            message : error.message
         });
     }
 
@@ -131,6 +143,59 @@ router.get('/profile',authenticateToken, async (req,res)=>{
     res.json({
         user
     });
+});
+
+
+// api for refresh token
+router.get('/refreshToken', async (req,res)=>{
+    // getting token from cookie
+    const token = req.cookies.refreshToken;
+
+    if(!token){
+        return res.status(401).json({
+            message : 'Token not found!'
+        });
+    }
+    
+    try{
+        //decoding the token to get id
+        const decode = jwt.decode(token,process.env.JWT_REFRESH_SCRET_KEY);
+        const id = decode.id;
+
+        // getting obj of user from db
+        const user = await userReg.findById(id);
+
+        if(!user || user.refreshToken!== token){
+            return res.status(401).json({
+                message : 'Token is not valid!'
+            });
+        }
+
+        // generating access token
+        const accessToken = jwt.sign({id : user._id},process.env.JWT_SCRET_KEY,{expiresIn : '1h'});
+        // generating refresh token
+        const refreshToken = jwt.sign({id : user._id},process.env.JWT_REFRESH_SCRET_KEY);
+
+        // updating refresh token in user obj db and in cookies
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        // res.cookie('refreshToken',refreshToken,{httpOnly : true, path : '/refreshToken'});
+        res.cookie('refreshToken',refreshToken,{httpOnly : true});
+
+        res.json({
+            message : 'Token Refeshed!',
+            accessToken,
+            refreshToken
+        });
+
+    }
+    catch(error){
+        res.status(401).json({
+            message : error.message
+        });
+    }
+
 });
 
 module.exports = router;

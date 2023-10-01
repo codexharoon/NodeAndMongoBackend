@@ -24,6 +24,9 @@ const userRegSchema = mongoose.Schema(
         gender:{
             type:String,
             default:'Not Specified'
+        },
+        refreshToken:{
+            type:String
         }
     }
 );
