@@ -9,11 +9,13 @@ function authenticateToken(req,res,next){
     try{
         const accessToken = req.headers['authorization'].split(' ')[1];
 
-        const {id} = req.body;
+        // const {id} = req.body;
 
         const verifyToken = jwt.verify(accessToken,process.env.SCRET_KEY);
 
-        if(verifyToken.id == id){
+        req.id = verifyToken.id;
+
+        if(verifyToken.id){
             next();
         }
         else{
@@ -108,7 +110,7 @@ router.post('/login',async (req,res)=>{
             });
         }
 
-        const accessToken = jwt.sign({id : user._id},process.env.SCRET_KEY,{expiresIn : '20s'});
+        const accessToken = jwt.sign({id : user._id},process.env.SCRET_KEY,{expiresIn : '120s'});
         const refreshToken = jwt.sign({id : user._id},process.env.REFRESH_SCRET_KEY);
 
         user.refreshToken = refreshToken;
@@ -135,7 +137,8 @@ router.post('/login',async (req,res)=>{
 
 router.get('/profile',authenticateToken, async (req,res)=>{
     try{
-        const {id} = req.body;
+        // const {id} = req.body;
+        const id = req.id;
         const userDetails = await USER.findById(id);
 
         res.json({
@@ -174,7 +177,7 @@ router.get('/refreshToken',async (req,res)=>{
         }
 
 
-        const accessToken = jwt.sign({id : decodeToken.id},process.env.SCRET_KEY,{expiresIn : '20s'});
+        const accessToken = jwt.sign({id : decodeToken.id},process.env.SCRET_KEY,{expiresIn : '120s'});
         const refreshToken = jwt.sign({id : decodeToken.id},process.env.REFRESH_SCRET_KEY);
 
 

@@ -12,5 +12,11 @@ app.use(cors());
 app.use(cookieParser());
 app.use('/user',userRoutes);
 
-app.get('/', (req, res) => res.send('Hello World!'));
+app.get('/', (req, res) => {
+    res.json({
+        message : 'API is working!'
+    });
+});
+
+
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
