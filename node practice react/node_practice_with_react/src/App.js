@@ -248,6 +248,7 @@ function App() {
       <button onClick={getUserData}>Get User Data</button>
       {
         userData && <div>
+          <img src={userData.profilePic} style={{height:100}}></img>
           <p>Username : {userData.username}</p>
           <p>Email : {userData.email}</p>
           <p>Age : {userData.age}</p>
